@@ -42,7 +42,7 @@ int execve_entry(struct trace_event_raw_sys_enter *ctx)
     count.rcount = 0;
     count.wcount = 0;
     
-    __sync_fetch_and_add(&map_curr_count, 1);
+    if (map_curr_count) __sync_fetch_and_add(&map_curr_count, 1);
     bpf_map_update_elem(&values, &pid, &count, BPF_ANY);
     bpf_printk("PID %d (%s) started execve", pid, count.comm);
 
@@ -64,7 +64,7 @@ int prog_exit(struct trace_event_raw_sys_exit *ctx)
                pid, count->comm, count->rcount, count->wcount);
     
     bpf_map_delete_elem(&values, &pid);
-    __sync_fetch_and_sub(&map_curr_count, 1);
+    if (map_curr_count) __sync_fetch_and_add(&map_curr_count, 1);
 
     return 0;
 }
@@ -84,7 +84,7 @@ int prog_exit_group(struct trace_event_raw_sys_exit *ctx)
                pid, count->comm, count->rcount, count->wcount);
     
     bpf_map_delete_elem(&values, &pid);
-    __sync_fetch_and_sub(&map_curr_count, 1);
+    if (map_curr_count) __sync_fetch_and_add(&map_curr_count, 1);
 
     return 0;
 }
